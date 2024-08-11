@@ -94,7 +94,7 @@ type Record struct {
 	IsComplete  string `csv:"IsComplete"`
 }
 
-func Read() {
+func Read(all bool) {
 	file, err := os.Open("data.csv")
 
 	if err != nil {
@@ -108,7 +108,21 @@ func Read() {
 	}
 
 	for _, record := range records {
+
+		if !all {
+
+			if isdone, err := strconv.ParseBool(record.IsComplete); err != nil {
+				panic(err)
+			} else if !isdone {
+
+				fmt.Printf("ID: %s, Description: %s, IsComplete: %s \n", record.ID, record.Description, record.IsComplete)
+				continue
+			}
+
+			continue
+		}
 		fmt.Printf("ID: %s, Description: %s, IsComplete: %s \n", record.ID, record.Description, record.IsComplete)
+
 	}
 
 	defer file.Close()
