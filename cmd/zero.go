@@ -5,37 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/gocarina/gocsv"
 )
-
-func Add(first string, second string) (result string) {
-	num1, err := strconv.ParseFloat(first, 64)
-	if err != nil {
-		fmt.Println("Error: First value is invalid")
-		return
-	}
-	num2, err := strconv.ParseFloat(second, 64)
-	if err != nil {
-		fmt.Println("Error: Second value is invalid")
-		return
-	}
-	return fmt.Sprintf("%f", num1+num2)
-}
-
-func Subtract(from string, subtract string) (result string) {
-	num1, err := strconv.ParseFloat(from, 64)
-	if err != nil {
-		fmt.Println("Error: First value is invalid")
-		return
-	}
-	num2, err := strconv.ParseFloat(subtract, 64)
-	if err != nil {
-		fmt.Println("Error: Second value is invalid")
-		return
-	}
-	return fmt.Sprintf("%f", num1-num2)
-}
 
 func Multiply(first string, second string, shouldRoundUp bool) (result string) {
 	num1, err := strconv.ParseFloat(first, 64)
@@ -69,22 +42,29 @@ func Divide(divide string, by string, shouldRoundUp bool) (result string, e erro
 	return fmt.Sprintf("%f", num1/num2), nil
 }
 
-func Write(ID, Description, CreatedAt, IsComplete string) {
+func Write(Description string) {
 
 	file, err := os.OpenFile("data.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		panic(err)
 	}
 
+	lastId := GetLastLineID()
+
+	now := time.Now()
+	formated := now.Format(time.RFC3339)
+
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
-	data := []string{ID, Description, CreatedAt, IsComplete}
+
+	ID := strconv.FormatInt(int64(lastId+1), 10)
+
+	data := []string{ID, Description, formated, "false"}
 
 	errr := writer.Write(data)
 	if errr != nil {
 		panic("this shit broke")
 	}
-
 }
 
 type Record struct {
@@ -101,6 +81,8 @@ func Read(all bool) {
 		panic(err)
 	}
 
+	defer file.Close()
+
 	var records []Record
 
 	if err := gocsv.UnmarshalFile(file, &records); err != nil {
@@ -109,21 +91,54 @@ func Read(all bool) {
 
 	for _, record := range records {
 
-		if !all {
-
-			if isdone, err := strconv.ParseBool(record.IsComplete); err != nil {
-				panic(err)
-			} else if !isdone {
-
-				fmt.Printf("ID: %s, Description: %s, IsComplete: %s \n", record.ID, record.Description, record.IsComplete)
-				continue
-			}
-
+		if all {
+			fmt.Printf("ID: %s, Description: %s, IsComplete: %s \n", record.ID, record.Description, record.IsComplete)
 			continue
 		}
-		fmt.Printf("ID: %s, Description: %s, IsComplete: %s \n", record.ID, record.Description, record.IsComplete)
+
+		if isdone, err := strconv.ParseBool(record.IsComplete); err != nil {
+			panic(err)
+		} else if !isdone {
+			fmt.Printf("ID: %s, Description: %s, IsComplete: %s \n", record.ID, record.Description, record.IsComplete)
+		}
 
 	}
 
 	defer file.Close()
 }
+
+func GetLastLineID() int {
+
+	file, err := os.Open("data.csv")
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+
+	var records []Record
+
+	if err := gocsv.UnmarshalFile(file, &records); err != nil {
+		panic(err)
+	}
+
+	if len(records) == 0 {
+		return 0
+	}
+
+	lastId, err := strconv.Atoi(records[len(records)-1].ID)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return lastId
+
+}
+
+// func Complete(target string) {
+
+// 	ID := strconv.Atoi(target)
+
+// }

@@ -1,21 +1,21 @@
 package cmd
 
 import (
-    "fmt"
-    "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
-var addCmd = &cobra.Command{
-    Use:     "add",
-    Aliases: []string{"addition"},
-    Short:   "Add 2 numbers",
-    Long:    "Carry out addition operation on 2 numbers",
-    Args:    cobra.ExactArgs(2),
-    Run: func(cmd *cobra.Command, args []string) {
-        fmt.Printf("Addition of %s and %s = %s.\n\n", args[0], args[1], Add(args[0], args[1]))
-    },
+var Addcmnd = &cobra.Command{
+	Use:     "add",
+	Aliases: []string{"create", "write"},
+	Short:   "adds a task",
+	Long:    "takes a describtion of a tasks and adds it to the data.csv file ",
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		Write(args[0])
+	},
 }
 
 func init() {
-    rootCmd.AddCommand(addCmd)
+
+	rootCmd.AddCommand(Addcmnd)
 }
